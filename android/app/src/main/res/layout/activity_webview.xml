@@ -25,4 +25,21 @@
             android:scaleType="fitCenter"
             android:contentDescription="HEAT Labs Logo" />
     </RelativeLayout>
+
+    <!-- Loading spinner overlay -->
+    <RelativeLayout
+        android:id="@+id/loading_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/loading_blur_overlay"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/loading_spinner"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerInParent="true"
+            android:indeterminateDrawable="@drawable/loading_spinner"
+            android:indeterminate="true" />
+    </RelativeLayout>
 </FrameLayout>

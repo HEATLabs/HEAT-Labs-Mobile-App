@@ -12,6 +12,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -29,8 +30,11 @@ class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var splashOverlay: RelativeLayout
     private lateinit var splashLogo: ImageView
+    private lateinit var loadingOverlay: RelativeLayout
+    private lateinit var loadingSpinner: ProgressBar
     private var isPageLoaded = false
     private var isSplashMinTimePassed = false
+    private var isFirstLoad = true
     private val okHttpClient = OkHttpClient()
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -41,6 +45,8 @@ class WebViewActivity : AppCompatActivity() {
         // Get splash overlay views
         splashOverlay = findViewById(R.id.splash_overlay)
         splashLogo = findViewById(R.id.splash_logo)
+        loadingOverlay = findViewById(R.id.loading_overlay)
+        loadingSpinner = findViewById(R.id.loading_spinner)
 
         // Hide status bar by default
         hideStatusBar()
@@ -51,8 +57,10 @@ class WebViewActivity : AppCompatActivity() {
         // Start fade in animation for logo
         splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in))
 
-        // Load tracking pixel in the background
-        loadTrackingPixel()
+        // Load tracking pixel only on first load
+        if (isFirstLoad) {
+            loadTrackingPixel()
+        }
 
         webView = findViewById(R.id.webview)
 
@@ -70,12 +78,25 @@ class WebViewActivity : AppCompatActivity() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 isPageLoaded = false
+
+                // Show loading spinner for navigation
+                if (!isFirstLoad) {
+                    showLoadingSpinner()
+                }
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 isPageLoaded = true
-                checkAndHideSplash()
+                isFirstLoad = false
+
+                if (isSplashMinTimePassed) {
+                    hideSplashAndLoading()
+                } else {
+                    // If splash time hasn't passed yet, just hide loading spinner
+                    hideLoadingSpinner()
+                }
+
                 // Inject JavaScript to handle link clicks
                 injectLinkHandler()
             }
@@ -116,6 +137,8 @@ class WebViewActivity : AppCompatActivity() {
                     // Handle mailto, tel, etc.
                     url.startsWith("mailto:") || url.startsWith("tel:") ||
                             url.startsWith("sms:") || url.startsWith("intent:") -> {
+                        // Hide loading spinner if shown
+                        hideLoadingSpinner()
                         // Open in appropriate app
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -127,6 +150,8 @@ class WebViewActivity : AppCompatActivity() {
                     }
                     // External links
                     else -> {
+                        // Hide loading spinner if shown
+                        hideLoadingSpinner()
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             startActivity(intent)
@@ -189,12 +214,15 @@ class WebViewActivity : AppCompatActivity() {
         when (nightModeFlags) {
             Configuration.UI_MODE_NIGHT_YES -> {
                 splashLogo.setImageResource(R.drawable.logo_dark)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background_dark)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
                 splashLogo.setImageResource(R.drawable.logo_light)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background_light)
             }
             else -> {
                 splashLogo.setImageResource(R.drawable.logo_light)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background_light)
             }
         }
     }
@@ -219,10 +247,56 @@ class WebViewActivity : AppCompatActivity() {
             override fun onAnimationEnd(animation: android.view.animation.Animation?) {
                 // Animation ended, hide splash overlay
                 splashOverlay.visibility = View.GONE
+                isFirstLoad = false
             }
 
             override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
         })
+    }
+
+    private fun showLoadingSpinner() {
+        runOnUiThread {
+            if (loadingOverlay.visibility != View.VISIBLE) {
+                loadingOverlay.visibility = View.VISIBLE
+                loadingSpinner.visibility = View.VISIBLE
+                // Fade in animation
+                loadingOverlay.startAnimation(
+                    android.view.animation.AnimationUtils.loadAnimation(
+                        this,
+                        R.anim.fade_in
+                    )
+                )
+            }
+        }
+    }
+
+    private fun hideLoadingSpinner() {
+        runOnUiThread {
+            if (loadingOverlay.visibility == View.VISIBLE) {
+                // Fade out animation
+                val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
+                loadingOverlay.startAnimation(fadeOut)
+                fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
+                    override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+                    override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                        loadingOverlay.visibility = View.GONE
+                        loadingSpinner.visibility = View.GONE
+                    }
+                    override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
+                })
+            }
+        }
+    }
+
+    private fun hideSplashAndLoading() {
+        runOnUiThread {
+            // Hide splash if it's still visible
+            if (splashOverlay.visibility == View.VISIBLE) {
+                fadeOutSplash()
+            }
+            // Hide loading spinner if it's visible
+            hideLoadingSpinner()
+        }
     }
 
     private fun injectLinkHandler() {
