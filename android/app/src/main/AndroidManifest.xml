@@ -15,7 +15,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".WebViewActivity"
             android:exported="true"
             android:theme="@style/Theme.HEATLabs">
             <intent-filter>
@@ -23,8 +23,5 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".WebViewActivity"
-            android:exported="false" />
     </application>
 </manifest>
