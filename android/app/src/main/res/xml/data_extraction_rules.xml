@@ -5,10 +5,4 @@
         <include domain="file" path="."/>
         <exclude domain="sharedpref" path="."/>
     </cloud-backup>
-    <!--
-    <device-transfer>
-        <include domain="file" path="."/>
-        <exclude domain="sharedpref" path="."/>
-    </device-transfer>
-    -->
 </data-extraction-rules>
