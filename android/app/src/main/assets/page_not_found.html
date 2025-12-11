@@ -95,9 +95,18 @@
     <button class="home-button" onclick="goHome()">Go to Homepage</button>
 </div>
 <script>
+    // Check for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark-mode');
     }
+    // Listen for theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (e.matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    });
 
     function goHome() {
       if (window.AndroidInterface && typeof window.AndroidInterface.goHome === 'function') {

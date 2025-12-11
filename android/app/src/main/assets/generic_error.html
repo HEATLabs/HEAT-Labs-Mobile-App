@@ -92,14 +92,21 @@
     </svg>
     <h1>Something Went Wrong</h1>
     <p>We're having trouble loading the page. Please try again. If you believe this error is incorrect, please contact the HEAT Labs Team.</p>
-    <div class="button-group">
-        <button class="home-button" onclick="goHome()">Go to Homepage</button>
-    </div>
+    <button class="home-button" onclick="goHome()">Go to Homepage</button>
 </div>
 <script>
+    // Check for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark-mode');
     }
+    // Listen for theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (e.matches) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+    });
 
     function goHome() {
       if (window.AndroidInterface && typeof window.AndroidInterface.goHome === 'function') {
