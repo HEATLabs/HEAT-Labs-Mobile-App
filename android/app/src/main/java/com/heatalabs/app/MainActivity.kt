@@ -40,12 +40,12 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, WebViewActivity::class.java)
         startActivity(intent)
 
-        // Wait for page to load (you can adjust timing as needed)
+        // Wait for page to load
         Handler(Looper.getMainLooper())
             .postDelayed(
                 { fadeOutSplashAndStartWebView() },
                 2000
-            ) // 2 seconds delay for demonstration
+            ) // 2 seconds delay
     }
 
     private fun setLogoBasedOnTheme() {
