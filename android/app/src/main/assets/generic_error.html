@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Something Went Wrong</title>
+    <style>
+        body {
+          margin: 0;
+          padding: 20px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background-color: #f5f5f5;
+          color: #333;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          text-align: center;
+        }
+
+        .dark-mode {
+          background-color: #121212;
+          color: #ffffff;
+        }
+
+        .error-container {
+          max-width: 400px;
+          padding: 40px;
+          border-radius: 16px;
+          background-color: white;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .error-container {
+          background-color: #1e1e1e;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .error-icon {
+          width: 80px;
+          height: 80px;
+          margin-bottom: 20px;
+          opacity: 0.8;
+        }
+
+        h1 {
+          font-size: 24px;
+          margin-bottom: 12px;
+          color: #FF8300;
+        }
+
+        p {
+          font-size: 16px;
+          line-height: 1.5;
+          margin-bottom: 24px;
+          color: #666;
+        }
+
+        .dark-mode p {
+          color: #aaa;
+        }
+
+        .home-button {
+          background-color: #FF8300;
+          color: white;
+          border: none;
+          padding: 12px 32px;
+          font-size: 16px;
+          font-weight: 600;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .home-button:hover {
+          background-color: #E67600;
+        }
+
+        @media (max-width: 480px) {
+          .error-container {
+            padding: 30px 20px;
+            margin: 20px;
+          }
+        }
+    </style>
+</head>
+<body>
+<div class="error-container">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <h1>Something Went Wrong</h1>
+    <p>We're having trouble loading the page. Please try again. If you believe this error is incorrect, please contact the HEAT Labs Team.</p>
+    <div class="button-group">
+        <button class="home-button" onclick="goHome()">Go to Homepage</button>
+    </div>
+</div>
+<script>
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.classList.add('dark-mode');
+    }
+
+    function goHome() {
+      if (window.AndroidInterface && typeof window.AndroidInterface.goHome === 'function') {
+        window.AndroidInterface.goHome();
+      } else {
+        window.location.href = 'https://heatlabs.net';
+      }
+    }
+</script>
+</body>
+</html>
