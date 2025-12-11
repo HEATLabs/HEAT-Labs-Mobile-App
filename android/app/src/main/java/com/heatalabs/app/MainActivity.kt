@@ -9,8 +9,6 @@ import android.os.Looper
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity() {
     private lateinit var splashContainer: RelativeLayout
