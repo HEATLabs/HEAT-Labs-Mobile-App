@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="orange_accent">#FFFF8300</color>
+    <color name="orange_accent_dark">#FFCC6900</color>
+    <color name="background_dark">#FF0E0E0E</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="splash_background_light">#FFE9ECEF</color>
+</resources>
