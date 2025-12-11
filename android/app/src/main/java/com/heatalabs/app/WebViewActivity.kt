@@ -18,6 +18,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -25,6 +31,7 @@ class WebViewActivity : AppCompatActivity() {
     private lateinit var splashLogo: ImageView
     private var isPageLoaded = false
     private var isSplashMinTimePassed = false
+    private val okHttpClient = OkHttpClient()
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +50,9 @@ class WebViewActivity : AppCompatActivity() {
 
         // Start fade in animation for logo
         splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in))
+
+        // Load tracking pixel in the background
+        loadTrackingPixel()
 
         webView = findViewById(R.id.webview)
 
@@ -150,6 +160,28 @@ class WebViewActivity : AppCompatActivity() {
 
         // Load the website
         webView.loadUrl("https://heatlabs.net")
+    }
+
+    private fun loadTrackingPixel() {
+        val trackingUrl = "https://views.heatlabs.net/api/track/pcwstats-tracker-pixel-android-app.png"
+
+        val request = Request.Builder()
+            .url(trackingUrl)
+            .header("User-Agent", "HEAT Labs Android App")
+            .get()
+            .build()
+
+        okHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Silent failure
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                // Tracking pixel loaded successfully
+                response.close()
+            }
+        })
     }
 
     private fun setLogoBasedOnTheme() {
@@ -265,5 +297,6 @@ class WebViewActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         webView.destroy()
+        okHttpClient.dispatcher.executorService.shutdown()
     }
 }
