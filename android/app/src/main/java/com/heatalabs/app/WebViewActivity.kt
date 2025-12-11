@@ -26,6 +26,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import androidx.core.view.isVisible
+import androidx.core.net.toUri
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -151,7 +152,7 @@ class WebViewActivity : AppCompatActivity() {
                             hideLoadingSpinner()
                             // Open in appropriate app
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                                 startActivity(intent)
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -163,7 +164,7 @@ class WebViewActivity : AppCompatActivity() {
                             // Hide loading spinner if shown
                             hideLoadingSpinner()
                             try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                                 startActivity(intent)
                             } catch (e: Exception) {
                                 e.printStackTrace()
