@@ -25,6 +25,7 @@ import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import androidx.core.view.isVisible
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -295,7 +296,7 @@ class WebViewActivity : AppCompatActivity() {
 
     private fun hideLoadingSpinner() {
         runOnUiThread {
-            if (loadingOverlay.visibility == View.VISIBLE) {
+            if (loadingOverlay.isVisible) {
                 // Fade out animation
                 val fadeOut =
                     android.view.animation.AnimationUtils.loadAnimation(
@@ -326,7 +327,7 @@ class WebViewActivity : AppCompatActivity() {
     private fun hideSplashAndLoading() {
         runOnUiThread {
             // Hide splash if it's still visible
-            if (splashOverlay.visibility == View.VISIBLE) {
+            if (splashOverlay.isVisible) {
                 fadeOutSplash()
             }
             // Hide loading spinner if it's visible
