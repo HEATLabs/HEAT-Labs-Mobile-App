@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">HEAT Labs</string>
+    <string name="activity_heat_labs_logo">HEAT Labs Logo</string>
+    <string name="splash_heat_labs_logo">HEAT Labs Logo</string>
 </resources>
