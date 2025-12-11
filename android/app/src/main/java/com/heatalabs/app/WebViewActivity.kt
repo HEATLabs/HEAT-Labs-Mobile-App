@@ -1,12 +1,16 @@
 package com.heatalabs.app
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -36,6 +40,7 @@ class WebViewActivity : AppCompatActivity() {
     private var isPageLoaded = false
     private var isSplashMinTimePassed = false
     private var isFirstLoad = true
+    private var hasNetworkError = false
     private val okHttpClient = OkHttpClient()
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -60,6 +65,12 @@ class WebViewActivity : AppCompatActivity() {
             android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in)
         )
 
+        // Check network connectivity before loading
+        if (!isNetworkAvailable()) {
+            showNoInternetPage()
+            return
+        }
+
         // Load tracking pixel only on first load
         if (isFirstLoad) {
             loadTrackingPixel()
@@ -76,7 +87,7 @@ class WebViewActivity : AppCompatActivity() {
         webView.settings.displayZoomControls = false
         webView.settings.setSupportMultipleWindows(false)
 
-        // Set WebViewClient to handle link clicks and page loading
+        // Set WebViewClient to handle link clicks, page loading, and errors
         webView.webViewClient =
             object : WebViewClient() {
                 override fun onPageStarted(
@@ -86,6 +97,7 @@ class WebViewActivity : AppCompatActivity() {
                 ) {
                     super.onPageStarted(view, url, favicon)
                     isPageLoaded = false
+                    hasNetworkError = false
 
                     // Show loading spinner for navigation
                     if (!isFirstLoad) {
@@ -95,18 +107,31 @@ class WebViewActivity : AppCompatActivity() {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    isPageLoaded = true
-                    isFirstLoad = false
 
-                    if (isSplashMinTimePassed) {
-                        hideSplashAndLoading()
-                    } else {
-                        // If splash time hasn't passed yet, just hide loading spinner
-                        hideLoadingSpinner()
+                    // Only proceed if no error occurred
+                    if (!hasNetworkError) {
+                        isPageLoaded = true
+                        isFirstLoad = false
+
+                        if (isSplashMinTimePassed) {
+                            hideSplashAndLoading()
+                        } else {
+                            // If splash time hasn't passed yet, just hide loading spinner
+                            hideLoadingSpinner()
+                        }
+
+                        // Inject JavaScript to handle link clicks
+                        injectLinkHandler()
                     }
+                }
 
-                    // Inject JavaScript to handle link clicks
-                    injectLinkHandler()
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    handleWebViewError(error?.errorCode ?: -1)
                 }
 
                 override fun shouldOverrideUrlLoading(
@@ -117,12 +142,13 @@ class WebViewActivity : AppCompatActivity() {
                     return handleUrlLoading(url)
                 }
 
-                @Deprecated("Deprecated in API 24")
-                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                    return handleUrlLoading(url ?: "")
-                }
-
                 private fun handleUrlLoading(url: String): Boolean {
+                    // Check network connectivity before loading any URL
+                    if (!isNetworkAvailable()) {
+                        showNoInternetPage()
+                        return true
+                    }
+
                     return when {
                         // Handle internal navigation
                         url.startsWith("https://heatlabs.net") -> {
@@ -202,7 +228,95 @@ class WebViewActivity : AppCompatActivity() {
         webView.loadUrl("https://heatlabs.net")
     }
 
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    }
+
+    private fun showNoInternetPage() {
+        runOnUiThread {
+            hideLoadingSpinner()
+            webView.loadUrl("file:///android_asset/no_internet.html")
+            hasNetworkError = true
+            isPageLoaded = true
+
+            // Still hide splash after minimum time
+            if (isSplashMinTimePassed) {
+                hideSplashAndLoading()
+            }
+        }
+    }
+
+    private fun showErrorPage(errorCode: Int) {
+        runOnUiThread {
+            hideLoadingSpinner()
+
+            // Load appropriate error
+            when (errorCode) {
+                ERROR_HOST_LOOKUP,
+                ERROR_CONNECT,
+                ERROR_TIMEOUT -> {
+                    webView.loadUrl("file:///android_asset/no_internet.html")
+                }
+                ERROR_FILE_NOT_FOUND -> {
+                    webView.loadUrl("file:///android_asset/page_not_found.html")
+                }
+                else -> {
+                    webView.loadUrl("file:///android_asset/generic_error.html")
+                }
+            }
+
+            hasNetworkError = true
+            isPageLoaded = true
+
+            // Still hide splash after minimum time
+            if (isSplashMinTimePassed) {
+                hideSplashAndLoading()
+            }
+        }
+    }
+
+    private fun handleWebViewError(errorCode: Int) {
+        hasNetworkError = true
+
+        when (errorCode) {
+            ERROR_HOST_LOOKUP,
+            ERROR_CONNECT,
+            ERROR_TIMEOUT -> {
+                // Network connectivity issues
+                showNoInternetPage()
+            }
+            ERROR_FILE_NOT_FOUND -> {
+                // Page not found
+                showErrorPage(errorCode)
+            }
+            else -> {
+                // Generic error
+                showErrorPage(errorCode)
+            }
+        }
+    }
+
+    // WebView error constants
+    companion object {
+        private const val ERROR_HOST_LOOKUP = -2
+        private const val ERROR_CONNECT = -6
+        private const val ERROR_TIMEOUT = -8
+        private const val ERROR_FILE_NOT_FOUND = -12
+    }
+
     private fun loadTrackingPixel() {
+        // Only load tracking pixel if network is available
+        if (!isNetworkAvailable()) {
+            return
+        }
+
         val trackingUrl =
             "https://views.heatlabs.net/api/track/pcwstats-tracker-pixel-android-app.png"
 
@@ -402,6 +516,13 @@ class WebViewActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume()
+
+        // Check if we're on error page and retry if connection is restored
+        if (hasNetworkError && isNetworkAvailable()) {
+            hasNetworkError = false
+            webView.loadUrl("https://heatlabs.net")
+            showLoadingSpinner()
+        }
     }
 
     override fun onPause() {
