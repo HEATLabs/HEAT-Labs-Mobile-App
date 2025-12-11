@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         setLogoBasedOnTheme()
 
         // Start fade in animation
-        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in))
+        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in))
 
         // Start WebViewActivity and wait for page to load
         val intent = Intent(this, WebViewActivity::class.java)
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fadeOutSplashAndStartWebView() {
         // Fade out animation
-        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
+        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
         splashContainer.startAnimation(fadeOut)
         splashLogo.startAnimation(fadeOut)
 

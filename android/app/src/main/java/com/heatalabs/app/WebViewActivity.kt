@@ -55,7 +55,7 @@ class WebViewActivity : AppCompatActivity() {
         setLogoBasedOnTheme()
 
         // Start fade in animation for logo
-        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_in))
+        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in))
 
         // Load tracking pixel only on first load
         if (isFirstLoad) {
@@ -237,7 +237,7 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun fadeOutSplash() {
-        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
+        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
         splashOverlay.startAnimation(fadeOut)
         splashLogo.startAnimation(fadeOut)
 
@@ -263,7 +263,7 @@ class WebViewActivity : AppCompatActivity() {
                 loadingOverlay.startAnimation(
                     android.view.animation.AnimationUtils.loadAnimation(
                         this,
-                        R.anim.fade_in
+                        R.anim.loading_fade_in
                     )
                 )
             }
@@ -274,7 +274,7 @@ class WebViewActivity : AppCompatActivity() {
         runOnUiThread {
             if (loadingOverlay.visibility == View.VISIBLE) {
                 // Fade out animation
-                val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.fade_out)
+                val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.loading_fade_out)
                 loadingOverlay.startAnimation(fadeOut)
                 fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
                     override fun onAnimationStart(animation: android.view.animation.Animation?) {}
