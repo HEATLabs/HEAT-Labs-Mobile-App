@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -134,12 +135,48 @@ class WebViewActivity : AppCompatActivity() {
                     handleWebViewError(error?.errorCode ?: -1)
                 }
 
+                // Keep deprecated method for older Android versions
+                @SuppressLint("ObsoleteSdkInt")
+                @Deprecated(
+                    "Deprecated in API 23",
+                    ReplaceWith("onReceivedError(WebView, WebResourceRequest, WebResourceError)")
+                )
+                @Suppress("DEPRECATION")
+                override fun onReceivedError(
+                    view: WebView?,
+                    errorCode: Int,
+                    description: String?,
+                    failingUrl: String?
+                ) {
+                    super.onReceivedError(view, errorCode, description, failingUrl)
+                    // Only use this method on older Android versions
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                        handleWebViewError(errorCode)
+                    }
+                }
+
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
                     request: WebResourceRequest?
                 ): Boolean {
                     val url = request?.url.toString()
                     return handleUrlLoading(url)
+                }
+
+                // Keep deprecated method for older Android versions
+                @SuppressLint("ObsoleteSdkInt")
+                @Deprecated(
+                    "Deprecated in API 24",
+                    ReplaceWith("shouldOverrideUrlLoading(WebView, WebResourceRequest)")
+                )
+                @Suppress("DEPRECATION")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    // Only use this method on older Android versions
+                    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                        handleUrlLoading(url ?: "")
+                    } else {
+                        super.shouldOverrideUrlLoading(view, url)
+                    }
                 }
 
                 private fun handleUrlLoading(url: String): Boolean {
