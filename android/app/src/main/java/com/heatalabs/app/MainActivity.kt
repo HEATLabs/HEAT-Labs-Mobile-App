@@ -3,13 +3,13 @@ package com.heatalabs.app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
     private lateinit var splashContainer: RelativeLayout
@@ -32,16 +32,20 @@ class MainActivity : AppCompatActivity() {
         setLogoBasedOnTheme()
 
         // Start fade in animation
-        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in))
+        splashLogo.startAnimation(
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in)
+        )
 
         // Start WebViewActivity and wait for page to load
         val intent = Intent(this, WebViewActivity::class.java)
         startActivity(intent)
 
         // Wait for page to load (you can adjust timing as needed)
-        Handler(Looper.getMainLooper()).postDelayed({
-            fadeOutSplashAndStartWebView()
-        }, 2000) // 2 seconds delay for demonstration
+        Handler(Looper.getMainLooper())
+            .postDelayed(
+                { fadeOutSplashAndStartWebView() },
+                2000
+            ) // 2 seconds delay for demonstration
     }
 
     private fun setLogoBasedOnTheme() {
@@ -64,21 +68,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun fadeOutSplashAndStartWebView() {
         // Fade out animation
-        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
+        val fadeOut =
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
         splashContainer.startAnimation(fadeOut)
         splashLogo.startAnimation(fadeOut)
 
-        fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
-            override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+        fadeOut.setAnimationListener(
+            object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(animation: android.view.animation.Animation?) {}
 
-            override fun onAnimationEnd(animation: android.view.animation.Animation?) {
-                // Animation ended, remove splash
-                splashContainer.visibility = View.GONE
-                // Close MainActivity
-                finish()
+                override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                    // Animation ended, remove splash
+                    splashContainer.visibility = View.GONE
+                    // Close MainActivity
+                    finish()
+                }
+
+                override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
             }
-
-            override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
-        })
+        )
     }
 }

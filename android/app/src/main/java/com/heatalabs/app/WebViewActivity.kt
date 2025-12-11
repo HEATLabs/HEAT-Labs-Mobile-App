@@ -19,12 +19,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import java.io.IOException
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import java.io.IOException
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
@@ -55,7 +55,9 @@ class WebViewActivity : AppCompatActivity() {
         setLogoBasedOnTheme()
 
         // Start fade in animation for logo
-        splashLogo.startAnimation(android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in))
+        splashLogo.startAnimation(
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_in)
+        )
 
         // Load tracking pixel only on first load
         if (isFirstLoad) {
@@ -74,113 +76,125 @@ class WebViewActivity : AppCompatActivity() {
         webView.settings.setSupportMultipleWindows(false)
 
         // Set WebViewClient to handle link clicks and page loading
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                super.onPageStarted(view, url, favicon)
-                isPageLoaded = false
+        webView.webViewClient =
+            object : WebViewClient() {
+                override fun onPageStarted(
+                    view: WebView?,
+                    url: String?,
+                    favicon: android.graphics.Bitmap?
+                ) {
+                    super.onPageStarted(view, url, favicon)
+                    isPageLoaded = false
 
-                // Show loading spinner for navigation
-                if (!isFirstLoad) {
-                    showLoadingSpinner()
-                }
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                isPageLoaded = true
-                isFirstLoad = false
-
-                if (isSplashMinTimePassed) {
-                    hideSplashAndLoading()
-                } else {
-                    // If splash time hasn't passed yet, just hide loading spinner
-                    hideLoadingSpinner()
+                    // Show loading spinner for navigation
+                    if (!isFirstLoad) {
+                        showLoadingSpinner()
+                    }
                 }
 
-                // Inject JavaScript to handle link clicks
-                injectLinkHandler()
-            }
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    isPageLoaded = true
+                    isFirstLoad = false
 
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
-                val url = request?.url.toString()
-                return handleUrlLoading(url)
-            }
-
-            @Deprecated("Deprecated in API 24")
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                return handleUrlLoading(url ?: "")
-            }
-
-            private fun handleUrlLoading(url: String): Boolean {
-                return when {
-                    // Handle internal navigation
-                    url.startsWith("https://heatlabs.net") -> {
-                        // Load in WebView
-                        false
-                    }
-                    url.startsWith("http://heatlabs.net") -> {
-                        // Load in WebView
-                        false
-                    }
-                    // Handle subdomains
-                    url.contains(".heatlabs.net") &&
-                            (url.startsWith("https://") || url.startsWith("http://")) -> {
-                        false
-                    }
-                    // Handle relative URLs
-                    !url.contains("://") && !url.startsWith("javascript:") -> {
-                        false
-                    }
-                    // Handle mailto, tel, etc.
-                    url.startsWith("mailto:") || url.startsWith("tel:") ||
-                            url.startsWith("sms:") || url.startsWith("intent:") -> {
-                        // Hide loading spinner if shown
+                    if (isSplashMinTimePassed) {
+                        hideSplashAndLoading()
+                    } else {
+                        // If splash time hasn't passed yet, just hide loading spinner
                         hideLoadingSpinner()
-                        // Open in appropriate app
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                        true
                     }
-                    // External links
-                    else -> {
-                        // Hide loading spinner if shown
-                        hideLoadingSpinner()
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+
+                    // Inject JavaScript to handle link clicks
+                    injectLinkHandler()
+                }
+
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val url = request?.url.toString()
+                    return handleUrlLoading(url)
+                }
+
+                @Deprecated("Deprecated in API 24")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    return handleUrlLoading(url ?: "")
+                }
+
+                private fun handleUrlLoading(url: String): Boolean {
+                    return when {
+                        // Handle internal navigation
+                        url.startsWith("https://heatlabs.net") -> {
+                            // Load in WebView
+                            false
                         }
-                        true
+                        url.startsWith("http://heatlabs.net") -> {
+                            // Load in WebView
+                            false
+                        }
+                        // Handle subdomains
+                        url.contains(".heatlabs.net") &&
+                                (url.startsWith("https://") || url.startsWith("http://")) -> {
+                            false
+                        }
+                        // Handle relative URLs
+                        !url.contains("://") && !url.startsWith("javascript:") -> {
+                            false
+                        }
+                        // Handle mailto, tel, etc.
+                        url.startsWith("mailto:") ||
+                                url.startsWith("tel:") ||
+                                url.startsWith("sms:") ||
+                                url.startsWith("intent:") -> {
+                            // Hide loading spinner if shown
+                            hideLoadingSpinner()
+                            // Open in appropriate app
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            true
+                        }
+                        // External links
+                        else -> {
+                            // Hide loading spinner if shown
+                            hideLoadingSpinner()
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                                startActivity(intent)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            true
+                        }
                     }
                 }
             }
-        }
 
         // Set minimum splash time (2 seconds)
-        Handler(Looper.getMainLooper()).postDelayed({
-            isSplashMinTimePassed = true
-            checkAndHideSplash()
-        }, 2000)
+        Handler(Looper.getMainLooper())
+            .postDelayed(
+                {
+                    isSplashMinTimePassed = true
+                    checkAndHideSplash()
+                },
+                2000
+            )
 
         // Set up back button handling
-        val callback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (webView.canGoBack()) {
-                    webView.goBack()
-                } else {
-                    isEnabled = false
-                    onBackPressedDispatcher.onBackPressed()
+        val callback =
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (webView.canGoBack()) {
+                        webView.goBack()
+                    } else {
+                        isEnabled = false
+                        onBackPressedDispatcher.onBackPressed()
+                    }
                 }
             }
-        }
         onBackPressedDispatcher.addCallback(this, callback)
 
         // Load the website
@@ -188,25 +202,31 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun loadTrackingPixel() {
-        val trackingUrl = "https://views.heatlabs.net/api/track/pcwstats-tracker-pixel-android-app.png"
+        val trackingUrl =
+            "https://views.heatlabs.net/api/track/pcwstats-tracker-pixel-android-app.png"
 
-        val request = Request.Builder()
-            .url(trackingUrl)
-            .header("User-Agent", "HEAT Labs Android App")
-            .get()
-            .build()
+        val request =
+            Request.Builder()
+                .url(trackingUrl)
+                .header("User-Agent", "HEAT Labs Android App")
+                .get()
+                .build()
 
-        okHttpClient.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                // Silent failure
-                e.printStackTrace()
-            }
+        okHttpClient
+            .newCall(request)
+            .enqueue(
+                object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        // Silent failure
+                        e.printStackTrace()
+                    }
 
-            override fun onResponse(call: Call, response: Response) {
-                // Tracking pixel loaded successfully
-                response.close()
-            }
-        })
+                    override fun onResponse(call: Call, response: Response) {
+                        // Tracking pixel loaded successfully
+                        response.close()
+                    }
+                }
+            )
     }
 
     private fun setLogoBasedOnTheme() {
@@ -237,21 +257,24 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun fadeOutSplash() {
-        val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
+        val fadeOut =
+            android.view.animation.AnimationUtils.loadAnimation(this, R.anim.splash_fade_out)
         splashOverlay.startAnimation(fadeOut)
         splashLogo.startAnimation(fadeOut)
 
-        fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
-            override fun onAnimationStart(animation: android.view.animation.Animation?) {}
+        fadeOut.setAnimationListener(
+            object : android.view.animation.Animation.AnimationListener {
+                override fun onAnimationStart(animation: android.view.animation.Animation?) {}
 
-            override fun onAnimationEnd(animation: android.view.animation.Animation?) {
-                // Animation ended, hide splash overlay
-                splashOverlay.visibility = View.GONE
-                isFirstLoad = false
+                override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                    // Animation ended, hide splash overlay
+                    splashOverlay.visibility = View.GONE
+                    isFirstLoad = false
+                }
+
+                override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
             }
-
-            override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
-        })
+        )
     }
 
     private fun showLoadingSpinner() {
@@ -274,16 +297,28 @@ class WebViewActivity : AppCompatActivity() {
         runOnUiThread {
             if (loadingOverlay.visibility == View.VISIBLE) {
                 // Fade out animation
-                val fadeOut = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.loading_fade_out)
+                val fadeOut =
+                    android.view.animation.AnimationUtils.loadAnimation(
+                        this,
+                        R.anim.loading_fade_out
+                    )
                 loadingOverlay.startAnimation(fadeOut)
-                fadeOut.setAnimationListener(object : android.view.animation.Animation.AnimationListener {
-                    override fun onAnimationStart(animation: android.view.animation.Animation?) {}
-                    override fun onAnimationEnd(animation: android.view.animation.Animation?) {
-                        loadingOverlay.visibility = View.GONE
-                        loadingSpinner.visibility = View.GONE
+                fadeOut.setAnimationListener(
+                    object : android.view.animation.Animation.AnimationListener {
+                        override fun onAnimationStart(
+                            animation: android.view.animation.Animation?
+                        ) {}
+
+                        override fun onAnimationEnd(animation: android.view.animation.Animation?) {
+                            loadingOverlay.visibility = View.GONE
+                            loadingSpinner.visibility = View.GONE
+                        }
+
+                        override fun onAnimationRepeat(
+                            animation: android.view.animation.Animation?
+                        ) {}
                     }
-                    override fun onAnimationRepeat(animation: android.view.animation.Animation?) {}
-                })
+                )
             }
         }
     }
@@ -300,7 +335,8 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun injectLinkHandler() {
-        webView.evaluateJavascript("""
+        webView.evaluateJavascript(
+            """
             (function() {
                 // Prevent default behavior for all links
                 document.addEventListener('click', function(e) {
@@ -347,14 +383,18 @@ class WebViewActivity : AppCompatActivity() {
                     }
                 });
             })();
-        """.trimIndent(), null)
+        """
+                .trimIndent(),
+            null
+        )
     }
 
     private fun hideStatusBar() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).let { controller ->
             controller.hide(WindowInsetsCompat.Type.statusBars())
-            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
     }
 
