@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules>
+<data-extraction-rules
+    xmlns:tools="http://schemas.android.com/tools">
     <cloud-backup>
         <!-- Include all files except shared preferences -->
         <include domain="file" path="."/>
-        <exclude domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="."
+            tools:ignore="FullBackupContent" />
     </cloud-backup>
 </data-extraction-rules>
