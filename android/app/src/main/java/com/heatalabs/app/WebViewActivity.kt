@@ -156,21 +156,13 @@ class WebViewActivity : AppCompatActivity() {
         val nightModeFlags = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         when (nightModeFlags) {
             Configuration.UI_MODE_NIGHT_YES -> {
-                // Dark mode
                 splashLogo.setImageResource(R.drawable.logo_dark)
-                // Update background for dark theme
-                splashOverlay.setBackgroundResource(R.drawable.splash_background)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
-                // Light mode
                 splashLogo.setImageResource(R.drawable.logo_light)
-                // Update background for light theme
-                splashOverlay.setBackgroundResource(R.drawable.splash_background)
             }
             else -> {
-                // Default to light
                 splashLogo.setImageResource(R.drawable.logo_light)
-                splashOverlay.setBackgroundResource(R.drawable.splash_background)
             }
         }
     }
