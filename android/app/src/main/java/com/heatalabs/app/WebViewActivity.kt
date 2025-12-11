@@ -3,7 +3,6 @@ package com.heatalabs.app
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -16,17 +15,17 @@ import android.widget.ProgressBar
 import android.widget.RelativeLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import java.io.IOException
+import androidx.core.view.isVisible
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import androidx.core.view.isVisible
-import androidx.core.net.toUri
+import java.io.IOException
 
 class WebViewActivity : AppCompatActivity() {
     private lateinit var webView: WebView
