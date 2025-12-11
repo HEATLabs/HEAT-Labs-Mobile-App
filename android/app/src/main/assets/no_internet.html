@@ -86,10 +86,16 @@
           font-size: 14px;
           color: #999;
           margin-top: 20px;
+          font-family: monospace;
+          padding: 8px 16px;
+          background-color: #f0f0f0;
+          border-radius: 6px;
+          letter-spacing: 1px;
         }
 
         .dark-mode .error-code {
           color: #777;
+          background-color: #2a2a2a;
         }
 
         @media (max-width: 480px) {
@@ -116,8 +122,20 @@
     <h1>No Internet Connection</h1>
     <p>Please check your network connection and try again. If you believe this error is incorrect, please contact the HEAT Labs Team.</p>
     <button class="retry-button" onclick="retryConnection()">Try Again</button>
+    <div class="error-code" id="errorCodeDisplay">ERROR CODE: NET-000</div>
 </div>
 <script>
+    // Get error code from URL
+    function getErrorCodeFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorCode = urlParams.get('error');
+      return errorCode || 'NET-000';
+    }
+    // Display error code
+    function displayErrorCode() {
+      const errorCode = getErrorCodeFromUrl();
+      document.getElementById('errorCodeDisplay').textContent = `ERROR CODE: ${errorCode}`;
+    }
     // Check for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark-mode');
@@ -146,6 +164,8 @@
         retryConnection();
       }
     }, 5000);
+    // Initialize
+    displayErrorCode();
 </script>
 </body>
 </html>

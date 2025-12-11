@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Something Went Wrong</title>
+    <title>Application Error</title>
     <style>
         body {
           margin: 0;
@@ -61,7 +61,7 @@
           color: #aaa;
         }
 
-        .home-button {
+        .restart-button {
           background-color: #FF8300;
           color: white;
           border: none;
@@ -71,10 +71,38 @@
           border-radius: 8px;
           cursor: pointer;
           transition: background-color 0.2s;
+          margin-bottom: 16px;
         }
 
-        .home-button:hover {
+        .restart-button:hover {
           background-color: #E67600;
+        }
+
+        .error-code {
+          font-size: 14px;
+          color: #999;
+          margin-top: 20px;
+          font-family: monospace;
+          padding: 8px 16px;
+          background-color: #f0f0f0;
+          border-radius: 6px;
+          letter-spacing: 1px;
+        }
+
+        .dark-mode .error-code {
+          color: #777;
+          background-color: #2a2a2a;
+        }
+
+        .error-description {
+          font-size: 12px;
+          color: #888;
+          margin-top: 10px;
+          line-height: 1.4;
+        }
+
+        .dark-mode .error-description {
+          color: #aaa;
         }
 
         @media (max-width: 480px) {
@@ -88,13 +116,36 @@
 <body>
 <div class="error-container">
     <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
-    <h1>Something Went Wrong</h1>
-    <p>We're having trouble loading the page. Please try again. If you believe this error is incorrect, please contact the HEAT Labs Team.</p>
-    <button class="home-button" onclick="goHome()">Go to Homepage</button>
+    <h1>Application Error</h1>
+    <p>Something went wrong with the application. Please restart the app. If the problem persists, please contact the HEAT Labs Team.</p>
+    <button class="restart-button" onclick="restartApp()">Restart App</button>
+    <div class="error-code" id="errorCodeDisplay">ERROR CODE: APP-000</div>
+    <div class="error-description" id="errorDescription"></div>
 </div>
 <script>
+    // Error descriptions mapping
+    const errorDescriptions = {
+      'APP-001': 'WebView initialization failed',
+      'APP-002': 'Memory allocation error',
+      'APP-003': 'Configuration error',
+      'APP-004': 'Resource loading failed',
+      'APP-999': 'Unknown application error'
+    };
+    // Get error code from URL
+    function getErrorCodeFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorCode = urlParams.get('error');
+      return errorCode || 'APP-000';
+    }
+    // Display error code and description
+    function displayErrorInfo() {
+      const errorCode = getErrorCodeFromUrl();
+      document.getElementById('errorCodeDisplay').textContent = `ERROR CODE: ${errorCode}`;
+      const description = errorDescriptions[errorCode] || 'Unknown error occurred';
+      document.getElementById('errorDescription').textContent = description;
+    }
     // Check for dark mode
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.body.classList.add('dark-mode');
@@ -108,13 +159,16 @@
       }
     });
 
-    function goHome() {
-      if (window.AndroidInterface && typeof window.AndroidInterface.goHome === 'function') {
-        window.AndroidInterface.goHome();
+    function restartApp() {
+      if (window.AndroidInterface && typeof window.AndroidInterface.restartApp === 'function') {
+        window.AndroidInterface.restartApp();
       } else {
-        window.location.href = 'https://heatlabs.net';
+        // Fallback: reload the page
+        window.location.reload();
       }
     }
+    // Initialize
+    displayErrorInfo();
 </script>
 </body>
 </html>
