@@ -42,6 +42,7 @@ class WebViewActivity : AppCompatActivity() {
     private var isSplashMinTimePassed = false
     private var isFirstLoad = true
     private var hasNetworkError = false
+    private var currentErrorCode: String? = null
     private val okHttpClient = OkHttpClient()
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -68,6 +69,7 @@ class WebViewActivity : AppCompatActivity() {
 
         // Check network connectivity before loading
         if (!isNetworkAvailable()) {
+            currentErrorCode = "NET-001"
             showNoInternetPage()
             return
         }
@@ -99,6 +101,7 @@ class WebViewActivity : AppCompatActivity() {
                     super.onPageStarted(view, url, favicon)
                     isPageLoaded = false
                     hasNetworkError = false
+                    currentErrorCode = null
 
                     // Show loading spinner for navigation
                     if (!isFirstLoad) {
@@ -108,6 +111,17 @@ class WebViewActivity : AppCompatActivity() {
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+
+                    // Double-check network before considering page loaded
+                    if (
+                        !isNetworkAvailable() &&
+                        url != null &&
+                        !url.contains("file:///android_asset/")
+                    ) {
+                        currentErrorCode = "NET-002"
+                        showNoInternetPage()
+                        return
+                    }
 
                     // Only proceed if no error occurred
                     if (!hasNetworkError) {
@@ -182,6 +196,7 @@ class WebViewActivity : AppCompatActivity() {
                 private fun handleUrlLoading(url: String): Boolean {
                     // Check network connectivity before loading any URL
                     if (!isNetworkAvailable()) {
+                        currentErrorCode = "NET-003"
                         showNoInternetPage()
                         return true
                     }
@@ -266,20 +281,37 @@ class WebViewActivity : AppCompatActivity() {
     }
 
     private fun isNetworkAvailable(): Boolean {
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return try {
+            val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+            // For Android 10+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val network = connectivityManager.activeNetwork ?: return false
+                val capabilities =
+                    connectivityManager.getNetworkCapabilities(network) ?: return false
+
+                return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
+                        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            } else {
+                // For older Android versions
+                @Suppress("DEPRECATION") val networkInfo = connectivityManager.activeNetworkInfo
+                @Suppress("DEPRECATION") return networkInfo != null && networkInfo.isConnected
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
     private fun showNoInternetPage() {
         runOnUiThread {
             hideLoadingSpinner()
-            webView.loadUrl("file:///android_asset/no_internet.html")
+            val errorCode = currentErrorCode ?: "NET-000"
+            webView.loadUrl("file:///android_asset/no_internet.html?error=$errorCode")
             hasNetworkError = true
             isPageLoaded = true
 
@@ -290,22 +322,27 @@ class WebViewActivity : AppCompatActivity() {
         }
     }
 
-    private fun showErrorPage(errorCode: Int) {
+    private fun showErrorPage(errorCode: String, webViewErrorCode: Int? = null) {
         runOnUiThread {
             hideLoadingSpinner()
 
             // Load appropriate error
-            when (errorCode) {
+            val finalErrorCode = currentErrorCode ?: errorCode
+            when (webViewErrorCode) {
                 ERROR_HOST_LOOKUP,
                 ERROR_CONNECT,
                 ERROR_TIMEOUT -> {
-                    webView.loadUrl("file:///android_asset/no_internet.html")
+                    webView.loadUrl("file:///android_asset/no_internet.html?error=$finalErrorCode")
                 }
                 ERROR_FILE_NOT_FOUND -> {
-                    webView.loadUrl("file:///android_asset/page_not_found.html")
+                    webView.loadUrl(
+                        "file:///android_asset/page_not_found.html?error=$finalErrorCode"
+                    )
                 }
                 else -> {
-                    webView.loadUrl("file:///android_asset/generic_error.html")
+                    webView.loadUrl(
+                        "file:///android_asset/generic_error.html?error=$finalErrorCode"
+                    )
                 }
             }
 
@@ -322,20 +359,48 @@ class WebViewActivity : AppCompatActivity() {
     private fun handleWebViewError(errorCode: Int) {
         hasNetworkError = true
 
+        // Determine error type and code
         when (errorCode) {
-            ERROR_HOST_LOOKUP,
-            ERROR_CONNECT,
+            ERROR_HOST_LOOKUP -> {
+                currentErrorCode = "WEB-001"
+                // Network connectivity issues
+                showNoInternetPage()
+            }
+            ERROR_CONNECT -> {
+                currentErrorCode = "WEB-002"
+                // Network connectivity issues
+                showNoInternetPage()
+            }
             ERROR_TIMEOUT -> {
+                currentErrorCode = "WEB-003"
                 // Network connectivity issues
                 showNoInternetPage()
             }
             ERROR_FILE_NOT_FOUND -> {
+                currentErrorCode = "WEB-404"
                 // Page not found
-                showErrorPage(errorCode)
+                showErrorPage("WEB-404", errorCode)
+            }
+            ERROR_TOO_MANY_REQUESTS -> {
+                currentErrorCode = "WEB-429"
+                showErrorPage("WEB-429", errorCode)
+            }
+            ERROR_INTERNAL_SERVER -> {
+                currentErrorCode = "WEB-500"
+                showErrorPage("WEB-500", errorCode)
+            }
+            ERROR_BAD_GATEWAY -> {
+                currentErrorCode = "WEB-502"
+                showErrorPage("WEB-502", errorCode)
+            }
+            ERROR_SERVICE_UNAVAILABLE -> {
+                currentErrorCode = "WEB-503"
+                showErrorPage("WEB-503", errorCode)
             }
             else -> {
+                currentErrorCode = "WEB-999"
                 // Generic error
-                showErrorPage(errorCode)
+                showErrorPage("WEB-999", errorCode)
             }
         }
     }
@@ -346,6 +411,10 @@ class WebViewActivity : AppCompatActivity() {
         private const val ERROR_CONNECT = -6
         private const val ERROR_TIMEOUT = -8
         private const val ERROR_FILE_NOT_FOUND = -12
+        private const val ERROR_TOO_MANY_REQUESTS = -15
+        private const val ERROR_INTERNAL_SERVER = -16
+        private const val ERROR_BAD_GATEWAY = -17
+        private const val ERROR_SERVICE_UNAVAILABLE = -18
     }
 
     private fun loadTrackingPixel() {
@@ -557,6 +626,7 @@ class WebViewActivity : AppCompatActivity() {
         // Check if we're on error page and retry if connection is restored
         if (hasNetworkError && isNetworkAvailable()) {
             hasNetworkError = false
+            currentErrorCode = null
             webView.loadUrl("https://heatlabs.net")
             showLoadingSpinner()
         }
