@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.heatalabs.app'
+    namespace 'com.heatlabs.app'
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.heatalabs.app"
+        applicationId "com.heatlabs.app"
         minSdk 24
         targetSdk 36
         versionCode 2

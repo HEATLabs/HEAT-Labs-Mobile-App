@@ -1,4 +1,4 @@
-package com.heatalabs.app
+package com.heatlabs.app
 
 import android.annotation.SuppressLint
 import android.content.Context
