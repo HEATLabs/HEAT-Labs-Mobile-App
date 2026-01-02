@@ -455,15 +455,15 @@ class WebViewActivity : AppCompatActivity() {
         when (nightModeFlags) {
             Configuration.UI_MODE_NIGHT_YES -> {
                 splashLogo.setImageResource(R.drawable.logo_dark)
-                loadingOverlay.setBackgroundResource(R.drawable.loading_background_dark)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background)
             }
             Configuration.UI_MODE_NIGHT_NO -> {
                 splashLogo.setImageResource(R.drawable.logo_light)
-                loadingOverlay.setBackgroundResource(R.drawable.loading_background_light)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background)
             }
             else -> {
                 splashLogo.setImageResource(R.drawable.logo_light)
-                loadingOverlay.setBackgroundResource(R.drawable.loading_background_light)
+                loadingOverlay.setBackgroundResource(R.drawable.loading_background)
             }
         }
     }
