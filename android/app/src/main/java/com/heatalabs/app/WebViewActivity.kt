@@ -43,6 +43,8 @@ class WebViewActivity : AppCompatActivity() {
     private var isFirstLoad = true
     private var hasNetworkError = false
     private var currentErrorCode: String? = null
+    private var retryCount = 0
+    private val maxRetries = 3
     private val okHttpClient = OkHttpClient()
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -102,6 +104,7 @@ class WebViewActivity : AppCompatActivity() {
                     isPageLoaded = false
                     hasNetworkError = false
                     currentErrorCode = null
+                    retryCount = 0
 
                     // Show loading spinner for navigation
                     if (!isFirstLoad) {
@@ -127,6 +130,7 @@ class WebViewActivity : AppCompatActivity() {
                     if (!hasNetworkError) {
                         isPageLoaded = true
                         isFirstLoad = false
+                        retryCount = 0
 
                         if (isSplashMinTimePassed) {
                             hideSplashAndLoading()
@@ -340,9 +344,19 @@ class WebViewActivity : AppCompatActivity() {
                     )
                 }
                 else -> {
-                    webView.loadUrl(
-                        "file:///android_asset/generic_error.html?error=$finalErrorCode"
-                    )
+                    // For unknown errors, try to retry or show generic error without WEB-999
+                    if (retryCount < maxRetries) {
+                        retryCount++
+                        // Attempt to reload the page
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            webView.loadUrl("https://heatlabs.net")
+                            showLoadingSpinner()
+                        }, 1000)
+                        return@runOnUiThread
+                    } else {
+                        // After max retries, show no internet page as fallback
+                        webView.loadUrl("file:///android_asset/no_internet.html?error=NET-004")
+                    }
                 }
             }
 
@@ -398,9 +412,8 @@ class WebViewActivity : AppCompatActivity() {
                 showErrorPage("WEB-503", errorCode)
             }
             else -> {
-                currentErrorCode = "WEB-999"
-                // Generic error
-                showErrorPage("WEB-999", errorCode)
+                // For unknown errors, use showErrorPage which will retry or show fallback
+                showErrorPage("NET-004", errorCode)
             }
         }
     }
@@ -627,6 +640,7 @@ class WebViewActivity : AppCompatActivity() {
         if (hasNetworkError && isNetworkAvailable()) {
             hasNetworkError = false
             currentErrorCode = null
+            retryCount = 0
             webView.loadUrl("https://heatlabs.net")
             showLoadingSpinner()
         }
